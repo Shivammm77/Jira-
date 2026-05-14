@@ -6,6 +6,7 @@
 from pydantic import BaseModel , Field  , EmailStr
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 class Roles(Enum):
     PM = "PROJECT_MANAGER"
     developer = "DEVELOPER"
@@ -17,31 +18,36 @@ class Status(Enum):
 
 class workspace(BaseModel):
     name : str = Field(max_length=60)
-    created_at : datetime
+    
 class update_workspace(workspace):
-     pass    
+     name : Optional[str] = None  
 
 class invitemember(BaseModel):
      username : str
      role : Roles   
+
 class task(BaseModel):
-    title : str = Field(max_length=60)
-    desc :str = Field(max_length=300)
-    status : Status
-    created_at : datetime
-    updated_at : datetime
-class update_task(task):
-   status : Status
-   updated_at : datetime    
+    title: str = Field(max_length=60)
+
+    description: Optional[str] = Field(default=None,max_length=300)
+    status: Status = Status.pending
+
+    assignee_id: Optional[int] = None
+class UpdateTask(BaseModel):
+    
+
+    status: Optional[Status] = None
+
+    
 class project(BaseModel):
     name : str = Field(max_length=60)
 class update_project(project):
-    pass
+     pass
 class user(BaseModel):
     name :  str = Field(max_length=60)
     email : EmailStr
     password :str = Field(max_length=60)
-    created_at : datetime
+   
     
 class Config : 
         from_attribute = True

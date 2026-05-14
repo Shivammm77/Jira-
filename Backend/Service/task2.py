@@ -10,39 +10,178 @@ from database.Model.project import Project
 from database.Model.workspace import Workspace , WorkspaceMember
 from sqlalchemy.orm import Session
 from fastapi import HTTPException ,status
-def create_task(task1:task ,current_user :dict  ,workspace_id : int ,  user_id : int , project_id:int , db:Session ):
-    project = db.query(Project).filter(Project.project_id == project_id , Project.workspace_id == workspace_id).first()
-    
-    if not project : 
-       raise HTTPException(status_code=404 , detail="Project Not found")
-    exist_user = db.query(WorkspaceMember).filter(WorkspaceMember.user_id == current_user.get("user_id"), 
-                                                  WorkspaceMember.workspace_id ==workspace_id).first()
-    if not exist_user :
-        raise HTTPException(status_code=400 , detail="You are not a member of this workspace")
-    if not exist_user.role == Roles.PM  : 
-        HTTPException(status_code=400 , detail="You are not a project manager of this workspace")
+def create_task(
+    task1,
+    current_user,
+    workspace_id,
+    user_id,
+    project_id,
+    db
+):
 
-    user = db.query(WorkspaceMember).filter(WorkspaceMember.user_id == user_id, 
-                                                  WorkspaceMember.workspace_id ==workspace_id , WorkspaceMember.role == Roles.developer).first()
-    if not user :
-        raise HTTPException(status_code=403 , detail="its not a member of this workspace")
-    new_task = Task(
-        title = task1.title,
-        description = task1.desc,
-        status = task1.status.value,
-        project_id = project.project_id,
-        assignee_id = user.user_id,
-        created_by = exist_user.user_id,
-        created_at = task1.created_at,
-        updated_at = task1.updated_at
-        
+    # check project exists
+    project = (
+        db.query(Project)
+        .filter(
+            Project.project_id == project_id,
+            Project.workspace_id == workspace_id
+        )
+        .first()
     )
+
+    if not project:
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found"
+        )
+
+    # current user member?
+    current_member = (
+        db.query(WorkspaceMember)
+        .filter(
+            WorkspaceMember.user_id == current_user["user_id"],
+            WorkspaceMember.workspace_id == workspace_id
+        )
+        .first()
+    )
+
+    if not current_member:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not member of workspace"
+        )
+
+    # permission
+    if current_member.role != Roles.PM:
+        raise HTTPException(
+            status_code=403,
+            detail="Only PM can create tasks"
+        )
+
+    # assignee exists?
+    assignee = (
+        db.query(WorkspaceMember)
+        .filter(
+            WorkspaceMember.user_id == user_id,
+            WorkspaceMember.workspace_id == workspace_id
+        )
+        .first()
+    )
+
+    if not assignee:
+        raise HTTPException(
+            status_code=404,
+            detail="Invalid assignee"
+        )
+
+    new_task = Task(
+        title=task1.title,
+        description=task1.description,
+        status=task1.status,
+        project_id=project.project_id,
+        assignee_id=user_id,
+        created_by=current_user["user_id"]
+    )
+
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
+
     return {
-        "message" : "Task is created",
-        "Task" : new_task,
-        "created_by" : current_user.get("user_id")
+        "message": "Task created successfully",
+        "task": new_task
+    }
+def get_task_or_404(task_id,current_user,  db):
+
+    task = (
+        db.query(Task)
+        .filter(Task.task_id == task_id)
+        .first()
+    )
+    if task.created_by != current_user["user_id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied"
+        )
+
+
+    if not task:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    return task
+
+def get_all_tasks(
+    project_id,
+    current_user,
+    db
+):
+
+    tasks = (
+        db.query(Task)
+        .filter(Task.project_id == project_id)
+        .all()
+    )
+
+    return {
+        "total_tasks": len(tasks),
+        "tasks": tasks
     }
 
+def get_single_task(
+    task_id,
+    current_user,
+    db
+):
+
+    task = get_task_or_404(task_id,current_user, db)
+
+    return task
+def update_task(
+    task_id,
+    data,
+    current_user,
+    db
+):
+
+    task = get_task_or_404(task_id, current_user , db)
+
+    if task.created_by != current_user["user_id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied"
+        )
+
+    if task.status == data.status :
+        task.status = data.status
+
+    db.commit()
+    db.refresh(task)
+
+    return {
+        "message": "Task updated successfully",
+        "task": task
+    }
+
+def delete_task(
+    task_id,
+    current_user,
+    db
+):
+
+    task = get_task_or_404(task_id,current_user , db)
+
+    if task.created_by != current_user["user_id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Permission denied"
+        )
+
+    db.delete(task)
+    db.commit()
+
+    return {
+        "message": "Task deleted successfully"
+    }

@@ -5,6 +5,7 @@ from router.project import project1
 from router.task import task_router
 from contextlib import asynccontextmanager
 from database.db import create_db
+from fastapi.middleware.cors import CORSMiddleware
 import database.Model
 @asynccontextmanager
 async def lifespan(app : FastAPI):
@@ -12,13 +13,22 @@ async def lifespan(app : FastAPI):
     yield
     
 app = FastAPI(lifespan=lifespan)
-@app.middleware("http")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",   # React frontend
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/{user}")
 def working(user:str):
     return {"message" : f"working{user}"}
 
-app.include_router(auth , prefix="/v1/api")
-app.include_router(work , prefix="/v2/workspace")
-app.include_router(project1 , prefix="/v3/project")
-app.include_router(task_router , prefix="/v4/task")
+app.include_router(auth )
+app.include_router(work )
+app.include_router(project1 )
+app.include_router(task_router)

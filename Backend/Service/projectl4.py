@@ -2,8 +2,9 @@ from database.Model.project import Project
 from fastapi import HTTPException , Request , Response
 from database.Model.workspace import Workspace , WorkspaceMember
 from database.Model.task import Task
-from database.Schema.schema import Roles
 from database.Schema.schema import update_project
+from database.Schema.schema import Roles
+
 from sqlalchemy.orm import Session
 # project - get all task 
 
@@ -62,14 +63,21 @@ def delete_project(workspace_id:int ,project_id:int ,current_user:dict , db : Se
    
    member = db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == workspace_id , WorkspaceMember.user_id == current_user["user_id"] ).first()
    if not member  :
+        
         raise HTTPException(status_code=404 , detail="You ain't allow man" )
    if  member.role != Roles.PM:
        raise HTTPException(status_code=403 ,detail="only project manager can delete project" )
    exist_project = db.query(Project).filter(Project.project_id == project_id , Project.workspace_id == workspace_id).first()
+   if not exist_project:
+    raise HTTPException(
+        status_code=404,
+        detail="Project not found"
+    )
    db.delete(exist_project)
    db.commit()
    
-   return {
-       "message" : "Project is deleted Successfully",
-       "project" : exist_project
-   }
+   project_data = {
+    "project_id": exist_project.project_id,
+    "project_name": exist_project.project_name
+}
+   return project_data

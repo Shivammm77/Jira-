@@ -4,13 +4,14 @@ from sqlalchemy.orm import relationship
 from datetime import date
 from database.Schema.schema import Status
 from enum import Enum
+from sqlalchemy import Enum as SqlEnum
 class Task(Base):
     __tablename__ = "task"
 
     task_id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    status = Column(String, nullable=False)
+    status = Column( SqlEnum(Status) , default=Status.pending)
     assignee_id = Column(ForeignKey("user.user_id" , ondelete="SET NULL"))
     project_id = Column(ForeignKey("project.project_id" , ondelete="CASCADE") )
     

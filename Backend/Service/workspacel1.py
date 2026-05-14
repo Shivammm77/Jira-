@@ -14,21 +14,106 @@ def require_role(role :list[str]):
             raise HTTPException(status_code=403 , detail="You are not allowed")
         return user
     return get_role
-# def require_role(required_roles: list[str]):
-#     def role_checker(current_user: dict = Depends(get_current_user)):
-#         if current_user["role"] not in required_roles:
-#             raise HTTPException(
-#                 status_code=403,
-#                 detail="You do not have permission"
-#             )
-#         return current_user
-#     return role_checker
+
+
+def update(workspace_id ,data ,  current_user , db):
+    workspace = db.query(Workspace).filter(Workspace.work_id == workspace_id).first()
+    if not workspace:
+        raise HTTPException(
+            status_code=404,
+            detail="Workspace not found"
+        )
+    member = db.query(WorkspaceMember).filter( WorkspaceMember.workspace_id == workspace_id,WorkspaceMember.user_id == current_user["user_id"]).first()
+    if not member :
+        raise HTTPException(status_code=403 , detail="you are not the part of this workspace")
+    if member.role != Roles.PM:
+        raise HTTPException(status_code=403 , detail= "permission denied")
+    if data.name:
+        workspace.workspacename = data.name
+
+    db.commit()
+    db.refresh(workspace)
+
+    return {
+        "message": "Workspace updated successfully",
+        "workspace": {
+            "id": workspace.work_id,
+            "name": workspace.workspacename
+        }
+    }
+
+
+def delete_workspace( workspace_id, current_user,db):
+    workspace = db.query(Workspace).filter( Workspace.workspace_id == workspace_id).first()
+    if not workspace:
+        raise HTTPException(
+            status_code=404,
+            detail="Workspace not found"
+        )
+    member = db.query(WorkspaceMember).filter( WorkspaceMember.workspace_id == workspace_id, WorkspaceMember.user_id == current_user["user_id"]).first()
+    
+    if not member:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+    if member.role != "PROJECT_MANAGER":
+        raise HTTPException(
+            status_code=403,
+            detail="Only owner can delete workspace"
+        )
+    db.delete(workspace)
+    db.commit()
+
+    return {
+        "message": "Workspace deleted successfully"
+    }
+def get_all_workspaces(current_user, db):
+
+    workspaces = (
+        db.query(Workspace)
+        .join(
+            WorkspaceMember,
+            Workspace.work_id == WorkspaceMember.workspace_id 
+        )
+        .filter(
+            WorkspaceMember.user_id == current_user["user_id"]
+        )
+        .all()
+    )
+
+    return workspaces
+def get_members(workspace_id, current_user, db):
+    member = (
+        db.query(WorkspaceMember)
+        .filter(
+            WorkspaceMember.workspace_id == workspace_id,
+            WorkspaceMember.user_id == current_user["user_id"]
+        )
+        .first()
+    )
+
+    if not member:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied"
+        )
+
+    members = (
+        db.query(WorkspaceMember)
+        .filter(
+            WorkspaceMember.workspace_id == workspace_id
+        )
+        .all()
+    )
+
+    return members
 def create_workspace(space : workspace , db : Session  ,current_user ):
     
    
     new_workspace =  Workspace(
         workspacename = space.name,
-        created_at = space.created_at,
+       
         created_by = current_user["user_id"]
     )
     db.add(new_workspace)
@@ -55,7 +140,15 @@ def invite_member(username:str , role1 : Roles , workspace_id:int, current_user:
         raise HTTPException(status_code=403, detail="You are not a member of this workspace")
     if invite_member.role != Roles.PM:
        raise HTTPException(status_code=403, detail="You are not allowed to invite member")
+    count = db.query(Workspace).filter(Workspace.work_id == workspace_id).count()
+    if count >= 7:
+     raise HTTPException(
+        status_code=403,
+        detail="Workspace member limit reached"
+    )
     invite_user  = db.query(User).filter(User.username == username).first()
+    if not invite_user : 
+        raise HTTPException(status_code=403 , detail="user does not exist") 
     exist_member = db.query(WorkspaceMember).filter(
         WorkspaceMember.workspace_id == workspace_id,
         WorkspaceMember.user_id == invite_user.user_id
@@ -63,6 +156,11 @@ def invite_member(username:str , role1 : Roles , workspace_id:int, current_user:
 
     if exist_member :
         raise HTTPException(status_code=403, detail="You are already here")
+    if role1 == Roles.PM:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot assign Project Manager role"
+        )
     new_member = WorkspaceMember(
         workspace_id = invite_member.workspace_id,
         user_id = invite_user.user_id,
@@ -78,9 +176,8 @@ def invite_member(username:str , role1 : Roles , workspace_id:int, current_user:
         "User Role" : role1.value
     }    
 
-def limit_of_member():
-    pass
-#  ek team me 5 se jyda member
+
+
 def delete_workspace(workspace_id : int , current_user :dict , db:Session):
   
     invite_member = db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == workspace_id , WorkspaceMember.user_id ==current_user["user_id"]).first()
@@ -88,7 +185,7 @@ def delete_workspace(workspace_id : int , current_user :dict , db:Session):
         raise HTTPException(status_code=403, detail="You are not a member of this workspace")
     if invite_member.role != Roles.PM:
        raise HTTPException(status_code=403, detail="You are not allowed to invite member")
-    exist_workspace = db.query(Workspace)._filter(Workspace.work_id == workspace_id).first()
+    exist_workspace = db.query(Workspace).filter(Workspace.work_id == workspace_id).first()
     if not exist_workspace :
        raise HTTPException(status_code=404 , detail="workspace does not exist")
     db.delete(exist_workspace)
