@@ -21,9 +21,10 @@ def create_project(workspace_id:int,current_user:dict , new_project:str,  db:Ses
     db.commit()
     db.refresh(new_project)
     return {
-        "messsage" : "Project created successfully",
-        "projectname" : new_project.project_name,
-        "project_id" : new_project.workspace_id
+        "message": "Project created successfully",
+        "project_id": new_project.project_id,
+        "project_name": new_project.project_name,
+        "workspace_id": new_project.workspace_id
     }    
 def rename_project(workspace_id:int,current_user:dict , update_name:update_project,project_id : int,  db:Session): 
     member = db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == workspace_id , WorkspaceMember.user_id == current_user["user_id"] ).first()

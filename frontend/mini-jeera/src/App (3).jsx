@@ -16,7 +16,7 @@ const ROUTES = {
   inviteMember:     (wid) => `/workspace/${wid}/new_member`,
   createProject:    (wid) => `/${wid}/create_project`,
   deleteProject:    (wid, pid) => `/${wid}/${pid}/delete_name`,
-  createTask:       (wid, pid, uid) => `/${wid}/${pid}/create_task?user_id=${uid || 0}`,
+  createTask:       (wid, pid, uid) => `/tasks/${wid}/${pid}/create_task?user_id=${uid}`,
   allTasks:         (pid) => `/tasks/${pid}`,
   updateTask:       (tid) => `/tasks/${tid}`,
   deleteTask:       (tid) => `/tasks/${tid}`,
@@ -798,6 +798,7 @@ function ProjectsPage({ token, workspaces, selWS, setSelWS, projects, setProject
     setLoading(true); setMsg("");
     try {
       const d = await apiFetch(ROUTES.createProject(selWS.work_id), { method: "POST", body: JSON.stringify({ name: form.name }) }, token);
+      console.log(d);
       setProjects(p => [...p, { ...d, _wsId: selWS.work_id }]);
       setModal(null); setForm({ name: "" });
     } catch (e) { setMsg(e.message); }
@@ -899,7 +900,8 @@ function Board({ token, selProj, setSelProj, selWS, projects, tasks, setTasks })
     setFetching(true);
     try {
       const d = await apiFetch(ROUTES.allTasks(selProj.project_id), {}, token);
-      setTasks(Array.isArray(d) ? d : []);
+      console.log(d)
+      setTasks(Array.isArray(d.tasks) ? d.tasks : []);
     } catch { setTasks([]); }
     setFetching(false);
   }

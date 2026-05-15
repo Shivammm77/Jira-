@@ -31,4 +31,4 @@ def working(user:str):
 app.include_router(auth )
 app.include_router(work )
 app.include_router(project1 )
-app.include_router(task_router)
+app.include_router(task_router , prefix="/tasks")

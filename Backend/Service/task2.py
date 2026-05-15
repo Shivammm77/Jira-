@@ -154,7 +154,7 @@ def update_task(
             detail="Permission denied"
         )
 
-    if task.status == data.status :
+    if task.status != data.status :
         task.status = data.status
 
     db.commit()
