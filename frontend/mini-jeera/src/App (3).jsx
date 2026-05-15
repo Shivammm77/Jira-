@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 /* ══════════════════════════════════════════════════════════════
    CONFIG — update API_BASE to match your FastAPI server
 ══════════════════════════════════════════════════════════════ */
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://jira-bfis.onrender.com"
 
 // Route prefixes (adjust to match how you mount your routers in main.py)
 const ROUTES = {
