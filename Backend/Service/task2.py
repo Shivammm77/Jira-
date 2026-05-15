@@ -98,7 +98,7 @@ def get_task_or_404(task_id,current_user,  db):
         .filter(Task.task_id == task_id)
         .first()
     )
-    if task.created_by != current_user["user_id"]:
+    if str(task.created_by) != str(current_user["user_id"]):
         raise HTTPException(
             status_code=403,
             detail="Permission denied"
@@ -148,7 +148,7 @@ def update_task(
 
     task = get_task_or_404(task_id, current_user , db)
 
-    if task.created_by != current_user["user_id"]:
+    if str(task.created_by) != str(current_user["user_id"]):
         raise HTTPException(
             status_code=403,
             detail="Permission denied"
@@ -173,7 +173,7 @@ def delete_task(
 
     task = get_task_or_404(task_id,current_user , db)
 
-    if task.created_by != current_user["user_id"]:
+    if task.created_by != str(current_user["user_id"]):
         raise HTTPException(
             status_code=403,
             detail="Permission denied"
