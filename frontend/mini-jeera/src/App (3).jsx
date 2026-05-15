@@ -276,22 +276,22 @@ function Landing({ goAuth, dark, setDark }) {
           lineHeight: 1.0, marginBottom: 28,
           fontSize: "clamp(52px, 8.5vw, 100px)",
         }}>
-          Ship faster.<br />
-          <span style={{
+          Ship faster Togather.<br />
+          {/* <span style={{
             background: dark
               ? "linear-gradient(120deg, #D4FF00 0%, #00FFB2 100%)"
               : "linear-gradient(120deg, #111 0%, #555 100%)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           }}>
             Together.
-          </span>
+          </span> */}
         </h1>
         <p style={{ fontSize: 19, color: "var(--txt2)", maxWidth: 520, margin: "0 auto 52px", lineHeight: 1.65, fontWeight: 400 }}>
           The project management tool your engineering team will actually use. Workspaces, boards, and role-based access — all in one.
         </p>
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
           <Btn v="primary" sz="lg" onClick={goAuth}>Start building <Ico n="arr" s={16} /></Btn>
-          <Btn v="secondary" sz="lg">Watch demo</Btn>
+          
         </div>
 
         {/* Stats strip */}
