@@ -10,6 +10,5 @@ bcrypt==4.0.1
 python-multipart
 psycopg2-binary
 pydantic[email]
-fastapi_mail
+fastapi-mail
 redis
-python-3.13
