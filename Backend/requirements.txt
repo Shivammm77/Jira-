@@ -12,3 +12,4 @@ psycopg2-binary
 pydantic[email]
 fastapi_mail
 redis
+python-3.13
