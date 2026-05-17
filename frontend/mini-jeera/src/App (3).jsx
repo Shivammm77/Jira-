@@ -374,11 +374,11 @@ function Auth({ goBack, onLogin, dark, setDark }) {
     setLoading(true); setMsg("");
     try {
       const body = new URLSearchParams();
-      body.append("username", form.email);
+      body.append("username", form.username);
       body.append("password", form.password);
       const data = await apiFetch(ROUTES.login, { method: "POST", body });
       if (!data.access_token) throw new Error(data.detail || "Login failed");
-      onLogin(data.access_token, { email: form.email, username: form.email.split("@")[0] });
+      onLogin(data.access_token, { username: form.username  });
     } catch (e) { setMsg(e.message); }
     setLoading(false);
   }
