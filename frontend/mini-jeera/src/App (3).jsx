@@ -361,10 +361,101 @@ function Landing({ goAuth, dark, setDark }) {
 
 /* ══════════════════════════════════════════════════════════════
    AUTH (Login / Sign-up)
-══════════════════════════════════════════════════════════════ */
+// ══════════════════════════════════════════════════════════════ */
+// function Auth({ goBack, onLogin, dark, setDark }) {
+//   const [view, setView] = useState("login");
+//   const [form, setForm] = useState({ name: "", email: "", password: "" });
+//   const [loading, setLoading] = useState(false);
+//   const [msg, setMsg] = useState("");
+
+//   const f = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
+
+//   async function handleLogin() {
+//     setLoading(true); setMsg("");
+//     try {
+//       const body = new URLSearchParams();
+//       body.append("username", form.username);
+//       body.append("password", form.password);
+//       const data = await apiFetch(ROUTES.login, { method: "POST", body });
+//       if (!data.access_token) throw new Error(data.detail || "Login failed");
+//       onLogin(data.access_token, { username: form.username  });
+//     } catch (e) { setMsg(e.message); }
+//     setLoading(false);
+//   }
+
+//   async function handleSignup() {
+//     setLoading(true); setMsg("");
+//     try {
+//       await apiFetch(ROUTES.signup, { method: "POST", body: JSON.stringify({ name: form.name, email: form.email, password: form.password }) });
+//       setMsg("Account created! Please sign in.");
+//       setView("login");
+//     } catch (e) { setMsg(e.message); }
+//     setLoading(false);
+//   }
+
+//   return (
+//     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)" }}>
+//       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 36px" }}>
+//         <button onClick={goBack} style={{ background: "none", border: "none", cursor: "pointer" }}>
+//           <Logo />
+//         </button>
+//         <ThemeToggle dark={dark} setDark={setDark} />
+//       </div>
+
+//       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+//         <div className="fi" style={{ width: "100%", maxWidth: 420 }}>
+//           <div style={{ textAlign: "center", marginBottom: 36 }}>
+//             <div style={{ width: 56, height: 56, background: "var(--acc)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+//               <span style={{ fontFamily: "var(--font-d)", fontWeight: 800, fontSize: 24, color: "var(--acc-fg)" }}>J</span>
+//             </div>
+//             <h1 style={{ fontFamily: "var(--font-d)", fontSize: 32, fontWeight: 800, letterSpacing: "-.03em", marginBottom: 6 }}>
+//               {view === "login" ? "Welcome back" : "Get started"}
+//             </h1>
+//             <p style={{ color: "var(--txt2)", fontSize: 15 }}>
+//               {view === "login" ? "Sign in to your workspace" : "Create your free account"}
+//             </p>
+//           </div>
+
+//           <Card style={{ padding: 32 }}>
+//             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+//               {view === "signup" && (
+//                 <Field label="Full Name">
+//                   <input placeholder="Jane Smith" value={form.name} onChange={f("name")} />
+//                 </Field>
+//               )}
+//               <Field label="Email">
+//                 <input type="email" placeholder="you@company.com" value={form.email} onChange={f("email")} />
+//               </Field>
+//               <Field label="Password">
+//                 <input type="password" placeholder="••••••••" value={form.password} onChange={f("password")}
+//                   onKeyDown={e => e.key === "Enter" && (view === "login" ? handleLogin() : handleSignup())} />
+//               </Field>
+//               <ErrBox msg={msg} />
+//               <Btn v="primary" onClick={view === "login" ? handleLogin : handleSignup} disabled={loading}
+//                 style={{ width: "100%", justifyContent: "center", paddingTop: 12, paddingBottom: 12 }}>
+//                 {loading ? "Please wait…" : view === "login" ? "Sign In" : "Create Account"}
+//               </Btn>
+//             </div>
+//           </Card>
+
+//           <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: "var(--txt2)" }}>
+//             {view === "login" ? "Don't have an account? " : "Already have an account? "}
+//             <button onClick={() => { setView(v => v === "login" ? "signup" : "login"); setMsg(""); }}
+//               style={{ background: "none", border: "none", color: "var(--acc)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+//               {view === "login" ? "Sign up free" : "Sign in"}
+//             </button>
+//           </p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+import React, { useState } from "react";
+
 function Auth({ goBack, onLogin, dark, setDark }) {
   const [view, setView] = useState("login");
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  // 1. Updated state: changed 'email' to 'username'
+  const [form, setForm] = useState({ name: "", username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -374,11 +465,12 @@ function Auth({ goBack, onLogin, dark, setDark }) {
     setLoading(true); setMsg("");
     try {
       const body = new URLSearchParams();
+      // 2. This now correctly maps the 'username' from state
       body.append("username", form.username);
       body.append("password", form.password);
       const data = await apiFetch(ROUTES.login, { method: "POST", body });
       if (!data.access_token) throw new Error(data.detail || "Login failed");
-      onLogin(data.access_token, { username: form.username  });
+      onLogin(data.access_token, { username: form.username });
     } catch (e) { setMsg(e.message); }
     setLoading(false);
   }
@@ -386,7 +478,11 @@ function Auth({ goBack, onLogin, dark, setDark }) {
   async function handleSignup() {
     setLoading(true); setMsg("");
     try {
-      await apiFetch(ROUTES.signup, { method: "POST", body: JSON.stringify({ name: form.name, email: form.email, password: form.password }) });
+      // 3. Updated signup payload to send 'username' instead of 'email'
+      await apiFetch(ROUTES.signup, { 
+        method: "POST", 
+        body: JSON.stringify({ name: form.name, username: form.username, password: form.password }) 
+      });
       setMsg("Account created! Please sign in.");
       setView("login");
     } catch (e) { setMsg(e.message); }
@@ -423,8 +519,9 @@ function Auth({ goBack, onLogin, dark, setDark }) {
                   <input placeholder="Jane Smith" value={form.name} onChange={f("name")} />
                 </Field>
               )}
-              <Field label="Email">
-                <input type="email" placeholder="you@company.com" value={form.email} onChange={f("email")} />
+              {/* 4. Changed Label, Type, Placeholder, Value, and Handler to Username */}
+              <Field label="Username">
+                <input type="text" placeholder="janesmith123" value={form.username} onChange={f("username")} />
               </Field>
               <Field label="Password">
                 <input type="password" placeholder="••••••••" value={form.password} onChange={f("password")}
