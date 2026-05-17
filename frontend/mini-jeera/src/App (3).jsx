@@ -450,12 +450,12 @@ function Landing({ goAuth, dark, setDark }) {
 //     </div>
 //   );
 // }
-// /import React, { useState } from "react";
+// import React, { useState } from "react";
 
 function Auth({ goBack, onLogin, dark, setDark }) {
   const [view, setView] = useState("login");
-  // 1. Updated state: changed 'email' to 'username'
-  const [form, setForm] = useState({ name: "", username: "", password: "" });
+  // Kept 'email' for signup, and added 'username' for login
+  const [form, setForm] = useState({ name: "", email: "", username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -465,8 +465,7 @@ function Auth({ goBack, onLogin, dark, setDark }) {
     setLoading(true); setMsg("");
     try {
       const body = new URLSearchParams();
-      // 2. This now correctly maps the 'username' from state
-      body.append("username", form.username);
+      body.append("username", form.username); // Logs in with username
       body.append("password", form.password);
       const data = await apiFetch(ROUTES.login, { method: "POST", body });
       if (!data.access_token) throw new Error(data.detail || "Login failed");
@@ -478,10 +477,10 @@ function Auth({ goBack, onLogin, dark, setDark }) {
   async function handleSignup() {
     setLoading(true); setMsg("");
     try {
-      // 3. Updated signup payload to send 'username' instead of 'email'
+      // Kept intact: Sign up still uses name, email, and password
       await apiFetch(ROUTES.signup, { 
         method: "POST", 
-        body: JSON.stringify({ name: form.name, username: form.username, password: form.password }) 
+        body: JSON.stringify({ name: form.name, email: form.email, password: form.password }) 
       });
       setMsg("Account created! Please sign in.");
       setView("login");
@@ -519,10 +518,18 @@ function Auth({ goBack, onLogin, dark, setDark }) {
                   <input placeholder="Jane Smith" value={form.name} onChange={f("name")} />
                 </Field>
               )}
-              {/* 4. Changed Label, Type, Placeholder, Value, and Handler to Username */}
-              <Field label="Username">
-                <input type="text" placeholder="janesmith123" value={form.username} onChange={f("username")} />
-              </Field>
+              
+              {/* Conditionally render Username for Login, and Email for Signup */}
+              {view === "login" ? (
+                <Field label="Username">
+                  <input type="text" placeholder="janesmith123" value={form.username} onChange={f("username")} />
+                </Field>
+              ) : (
+                <Field label="Email">
+                  <input type="email" placeholder="you@company.com" value={form.email} onChange={f("email")} />
+                </Field>
+              )}
+
               <Field label="Password">
                 <input type="password" placeholder="••••••••" value={form.password} onChange={f("password")}
                   onKeyDown={e => e.key === "Enter" && (view === "login" ? handleLogin() : handleSignup())} />
